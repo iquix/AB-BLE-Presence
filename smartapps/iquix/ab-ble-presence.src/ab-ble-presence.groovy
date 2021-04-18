@@ -1,7 +1,7 @@
 /**
- *  AB BLE Presence
+ *  AB BLE Presence (Version 0.1.0)
  *
- *  Copyright 2021 iquix
+ *  Copyright 2021 iquix (Jaewon Park)
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -122,10 +122,12 @@ def parseBLE() {
 	def devList = []
     devs.each { 
     	def payload = it[3].toLowerCase()
-    	if(payload.contains("aafe1516aafe")) devList << "eds_"+payload.substring(payload.indexOf("aafe1516aafe")+16)
-        else if(payload.contains("1aff4c000215")) devList << "ibc_"+payload.substring(payload.indexOf("1aff4c000215")+12)
+        def eds_index = payload.indexOf("aafe1516aafe")+16
+        def ibc_index = payload.indexOf("1aff4c000215")+12
+    	if(eds_index>=16) devList << "eds_"+payload.substring(eds_index, eds_index+32)
+        else if(ibc_index>=12) devList << "ibc_"+payload.substring(ibc_index, ibc_index+40)
     }
-    //log.debug "devList = ${devList}"
+    log.debug "devList = ${devList}"
     
     devList.each { 
         def device = getChildDevice("ble-"+it)?.see()
