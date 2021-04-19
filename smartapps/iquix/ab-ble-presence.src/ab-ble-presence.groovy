@@ -33,7 +33,7 @@ preferences {
 
 def mainPage() {
     dynamicPage(name: "mainPage", title: "AB BLE Presence", nextPage: null, uninstall: true, install: true) {
-    	if (state.accessToken) {
+        if (state.accessToken) {
             if(state.devList != null) {
                 section("Add a new BLE Device"){
                     href "addDevicePage", title: "Add a new BLE Device", description:""
@@ -54,15 +54,15 @@ def mainPage() {
                 paragraph "Make sure you have checked OAuth while installing SmartApp in the SmartThings IDE.\nPress 'Done' to complete installation."
             }
         }
-	}
+    }
 }
 
 def addDevicePage(){
     def addedDNIList = []
     def childDevices = getAllChildDevices()
     if (childDevices.size() > 0) {
-	    childDevices.each {childDevice->
-    	    addedDNIList.push(childDevice.deviceNetworkId)
+        childDevices.each {childDevice->
+            addedDNIList.push(childDevice.deviceNetworkId)
         }
     } else {
         log.debug "No child devices are registered yet"
@@ -81,10 +81,10 @@ def addDevicePage(){
 }
 
 def addSelectedDevice() {
-	log.debug "addSelectedDevice() called"
+    log.debug "addSelectedDevice() called"
     if(settings?.selectedDevice != "None" && settings?.selectedDevice != null){
         def dev = settings.selectedDevice
-    	log.debug "adding " + dev
+        log.debug "adding " + dev
         if (getChildDevice("ble-"+dev)) {
             //log.warn "device ${dev} already exists."
             return
@@ -98,15 +98,15 @@ def addSelectedDevice() {
 }
 
 def installed() {
-	log.debug "Installed with settings: ${settings}"
-	initialize()
+    log.debug "Installed with settings: ${settings}"
+    initialize()
     createAccessToken()
 }
 
 def updated() {
-	log.debug "Updated with settings: ${settings}"
+    log.debug "Updated with settings: ${settings}"
 
-	unsubscribe()
+    unsubscribe()
     addSelectedDevice()
     initialize()
 }
@@ -119,12 +119,12 @@ def parseBLE() {
     def devs = request.JSON?.devices
     if (devs == null) return
 
-	def devList = []
+    def devList = []
     devs.each { 
-    	def payload = it[3].toLowerCase()
+        def payload = it[3].toLowerCase()
         def eds_index = payload.indexOf("aafe1516aafe")+16
         def ibc_index = payload.indexOf("1aff4c000215")+12
-    	if(eds_index>=16) devList << "eds_"+payload.substring(eds_index, eds_index+32)
+        if(eds_index>=16) devList << "eds_"+payload.substring(eds_index, eds_index+32)
         else if(ibc_index>=12) devList << "ibc_"+payload.substring(ibc_index, ibc_index+40)
     }
     log.debug "devList = ${devList}"
@@ -132,20 +132,20 @@ def parseBLE() {
     devList.each { 
         def device = getChildDevice("ble-"+it)?.see()
     }
-   	state.devList = devList.collect()
+       state.devList = devList.collect()
 }
 
 def childCheckPresence() {
     log.debug "childCheckPresence()"
     if (childDevices.size() > 0) {
-	    childDevices.each { it?.checkPresence(considerPresent) }
+        childDevices.each { it?.checkPresence(considerPresent) }
     }
 }
 
 def renderConfig() {
-	def url = apiServerUrl("").replace("https://", "").split(":")
+    def url = apiServerUrl("").replace("https://", "").split(":")
     def configJson = new groovy.json.JsonOutput().toJson([
-          	Connection_Type: "HTTP Client",
+              Connection_Type: "HTTP Client",
             Host: url[0],
             Port: url[1].replace("/", ""),
             URI: "/api/smartapps/installations/${app.id}/parseBLE?access_token=${state.accessToken}",
@@ -166,10 +166,10 @@ def authError() {
 
 mappings {
     if (!params.access_token || (params.access_token && params.access_token != state.accessToken)) {
-	    path("/parseBLE") { action: [POST: "authError"] }
+        path("/parseBLE") { action: [POST: "authError"] }
         path("/config") { action: [GET: "authError"] }
     } else {
-	    path("/parseBLE") { action: [POST: "parseBLE"] }
+        path("/parseBLE") { action: [POST: "parseBLE"] }
         path("/config") { action: [GET: "renderConfig"] }
     }
 }
