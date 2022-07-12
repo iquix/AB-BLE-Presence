@@ -1,7 +1,7 @@
 /**
- *  AB BLE Presence (Version 0.1.0)
+ *  AB BLE Presence (Version 0.1.1)
  *
- *  Copyright 2021 iquix (Jaewon Park)
+ *  Copyright 2021-2022 iquix (Jaewon Park)
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -43,7 +43,7 @@ def mainPage() {
                 }
             } else {
                 section("Notice"){
-                    paragraph "Warning: No data received from the AB BLE Gateway. Make sure that you setup the gateway with the settings that can be obtained from the menu below."
+                    paragraph "Warning: No data received from the AB BLE Gateway. Make sure that you setup the AB BLE Gateway with the setting values from the menu below."
                 }
             }
             section("View Settings for AB BLE") {
@@ -126,13 +126,15 @@ def parseBLE() {
         def ibc_index = payload.indexOf("1aff4c000215")+12
         if(eds_index>=16) devList << "eds_"+payload.substring(eds_index, eds_index+32)
         else if(ibc_index>=12) devList << "ibc_"+payload.substring(ibc_index, ibc_index+40)
+        //else devList << payload
     }
+    devList.unique()
     log.debug "devList = ${devList}"
     
     devList.each { 
         def device = getChildDevice("ble-"+it)?.see()
     }
-       state.devList = devList.collect()
+    state.devList = devList.collect()
 }
 
 def childCheckPresence() {
@@ -145,7 +147,7 @@ def childCheckPresence() {
 def renderConfig() {
     def url = apiServerUrl("").replace("https://", "").split(":")
     def configJson = new groovy.json.JsonOutput().toJson([
-              Connection_Type: "HTTP Client",
+            Connection_Type: "HTTP Client",
             Host: url[0],
             Port: url[1].replace("/", ""),
             URI: "/api/smartapps/installations/${app.id}/parseBLE?access_token=${state.accessToken}",
@@ -153,6 +155,7 @@ def renderConfig() {
     ])
 
     def configString = new groovy.json.JsonOutput().prettyPrint(configJson)
+    log.debug configString
     render contentType: "text/plain", data: configString
 }
 
